@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Laporan Mingguan SPPG</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#eef2f7;
+padding:30px;
+text-align:center;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+.instansi{
+font-size:26px;
+font-weight:bold;
+margin-bottom:5px;
+}
+
+.sub{
+font-size:18px;
+margin-bottom:20px;
+}
+
+input{
+padding:8px;
+margin:5px;
+width:260px;
+}
+
+button{
+padding:12px 20px;
+border:none;
+background:#1f6cff;
+color:white;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+margin-top:20px;
+}
+
+.drop{
+border:2px dashed #bbb;
+height:200px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:#fafafa;
+cursor:pointer;
+}
+
+.drop img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="instansi">
+SPPG KOTA TANGERANG SELATAN
+</div>
+
+<div class="sub">
+CIPUTAT SAWAH 2
+</div>
+
+<input id="judul" placeholder="LAPORAN MINGGU 1"><br>
+<input id="divisi" placeholder="DIVISI PERSIAPAN"><br>
+<input id="tanggal" placeholder="Contoh: 03 - 08 Maret 2026"><br>
+
+<button onclick="buatPDF()">Generate PDF</button>
+
+<div class="grid" id="grid"></div>
+
+</div>
+
+<script>
+
+let images=[];
+let grid=document.getElementById("grid");
+
+for(let i=0;i<6;i++){
+
+let box=document.createElement("div");
+
+let drop=document.createElement("div");
+drop.className="drop";
+let hari=["Upload Foto Senin","Upload Foto Selasa","Upload Foto Rabu","Upload Foto Kamis","Upload Foto Jum'at","Upload Foto Sabtu"];
+
+drop.innerHTML=hari[i];
+
+let input=document.createElement("input");
+input.type="file";
+input.accept="image/*";
+input.style.display="none";
+
+drop.onclick=()=>input.click();
+
+input.onchange=e=>{
+
+let file=e.target.files[0];
+let reader=new FileReader();
+
+reader.onload=function(ev){
+
+images[i]=ev.target.result;
+
+drop.innerHTML="";
+let img=document.createElement("img");
+img.src=ev.target.result;
+drop.appendChild(img);
+
+}
+
+reader.readAsDataURL(file);
+
+}
+
+box.appendChild(drop);
+box.appendChild(input);
+
+grid.appendChild(box);
+
+}
+
+function buatPDF(){
+
+const { jsPDF } = window.jspdf;
+let pdf=new jsPDF('p','mm','a4');
+
+let judul=document.getElementById("judul").value || "LAPORAN MINGGU 1";
+let divisi=document.getElementById("divisi").value || "DIVISI";
+let tanggal=document.getElementById("tanggal").value || "";
+
+pdf.setFont("helvetica","bold");
+
+pdf.setFontSize(18);
+pdf.text("SPPG KOTA TANGERANG SELATAN",105,15,{align:"center"});
+
+pdf.setFontSize(14);
+pdf.text("CIPUTAT SAWAH 2",105,22,{align:"center"});
+
+pdf.setLineWidth(0.5);
+pdf.line(10,26,200,26);
+
+pdf.setFontSize(14);
+pdf.text(judul,105,35,{align:"center"});
+
+pdf.setFontSize(12);
+pdf.text(divisi,105,42,{align:"center"});
+
+pdf.text("Tanggal : "+tanggal,105,48,{align:"center"});
+
+let startY=55;
+
+let tableWidth=190;
+let tableHeight=230;
+
+let cellW=95;
+let cellH=76;
+
+let x=[10,105];
+let y=[startY,startY+cellH,startY+(cellH*2)];
+
+let index=0;
+
+for(let r=0;r<3;r++){
+for(let c=0;c<2;c++){
+
+pdf.rect(x[c],y[r],cellW,cellH);
+
+let img=images[index];
+
+if(img){
+
+let imgObj=new Image();
+imgObj.src=img;
+
+let boxW=cellW-4;
+let boxH=cellH-4;
+
+let ratio=Math.min(boxW/imgObj.width,boxH/imgObj.height);
+
+let newW=imgObj.width*ratio;
+let newH=imgObj.height*ratio;
+
+let posX=x[c]+(boxW-newW)/2+2;
+let posY=y[r]+(boxH-newH)/2+2;
+
+pdf.addImage(img,'JPEG',posX,posY,newW,newH);
+
+}
+
+index++;
+
+}
+}
+
+pdf.save("laporan_mingguan.pdf");
+
+}
+
+</script>
+
+</body>
+</html>
